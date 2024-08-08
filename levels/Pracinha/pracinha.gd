@@ -9,7 +9,7 @@ func _ready():
 	# Conecte o sinal 'body_entered' da 'porta_pracinha' ao método '_on_porta_pracinha_body_entered' de 'Crys
 
 # Chamado a cada quadro. 'delta' é o tempo decorrido desde o quadro anterior.
-func _process(delta):
+func _process(_delta):
 	if Global.finishedQuiz == true:
 		if atividadeResource.get_mini_fase() < 3:
 			atividadeResource.set_mini_fase(3)

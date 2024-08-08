@@ -2,7 +2,11 @@ extends Node
 
 
 const DialogueConstants = preload("../constants.gd")
-const DialogueSettings = preload("./settings.gd")
+const DialogueSettings = preload("../settings.gd")
+const DialogueManagerParseResult = preload("./parse_result.gd")
+
+
+signal file_content_changed(path: String, new_content: String)
 
 
 # Keeps track of errors and dependencies.
@@ -26,18 +30,31 @@ func _ready() -> void:
 	_build_cache()
 
 
+func reimport_files(files: PackedStringArray = []) -> void:
+	if files.is_empty(): files = get_files()
+
+	var file_system: EditorFileSystem = Engine.get_meta("DialogueManagerPlugin") \
+		.get_editor_interface() \
+		.get_resource_filesystem()
+
+	# NOTE: Godot 4.2rc1 has an issue with reimporting more than one
+	# file at a time so we do them one by one
+	for file in files:
+		file_system.reimport_files([file])
+		await get_tree().create_timer(0.2)
+
+
 ## Add a dialogue file to the cache.
 func add_file(path: String, parse_results: DialogueManagerParseResult = null) -> void:
-	var dependencies: PackedStringArray = []
-
-	if parse_results != null:
-		dependencies = Array(parse_results.imported_paths).filter(func(d): return d != path)
-
 	_cache[path] = {
 		path = path,
-		dependencies = dependencies,
+		dependencies = [],
 		errors = []
 	}
+
+	if parse_results != null:
+		_cache[path].dependencies = Array(parse_results.imported_paths).filter(func(d): return d != path)
+		_cache[path].parsed_at = Time.get_ticks_msec()
 
 	# If this is a fresh cache entry then we need to check for dependencies
 	if parse_results == null and not _update_dependency_paths.has(path):
@@ -47,6 +64,11 @@ func add_file(path: String, parse_results: DialogueManagerParseResult = null) ->
 ## Get the file paths in the cache.
 func get_files() -> PackedStringArray:
 	return _cache.keys()
+
+
+## Check if a file is known to the cache.
+func has_file(path: String) -> bool:
+	return _cache.has(path)
 
 
 ## Remember any errors in a dialogue file.
@@ -81,9 +103,11 @@ func queue_updating_dependencies(of_path: String) -> void:
 
 ## Update any references to a file path that has moved
 func move_file_path(from_path: String, to_path: String) -> void:
-	if _cache.has(from_path):
+	if not _cache.has(from_path): return
+
+	if to_path != "":
 		_cache[to_path] = _cache[from_path].duplicate()
-		_cache.erase(from_path)
+	_cache.erase(from_path)
 
 
 ## Get any dialogue files that import a given path.
@@ -92,8 +116,10 @@ func get_files_with_dependency(imported_path: String) -> Array:
 
 
 ## Get any paths that are dependent on a given path
-func get_dependent_paths(on_path: String) -> PackedStringArray:
-	return get_files_with_dependency(on_path).map(func(d): return d.path)
+func get_dependent_paths_for_reimport(on_path: String) -> PackedStringArray:
+	return get_files_with_dependency(on_path) \
+		.filter(func(d): return Time.get_ticks_msec() - d.get("parsed_at", 0) > 3000) \
+		.map(func(d): return d.path)
 
 
 # Build the initial cache for dialogue files.

@@ -2,7 +2,7 @@
 extends Node
 
 
-const DialogueConstants = preload("../constants.gd")
+const DialogueConstants = preload("./constants.gd")
 
 
 ### Editor config
@@ -15,9 +15,14 @@ const DEFAULT_SETTINGS = {
 	new_with_template = true,
 	include_all_responses = false,
 	ignore_missing_state_values = false,
-	custom_test_scene_path = preload("../test_scene.tscn").resource_path,
+	custom_test_scene_path = preload("./test_scene.tscn").resource_path,
 	default_csv_locale = "en",
-	balloon_path = ""
+	balloon_path = "",
+	create_lines_for_responses_with_characters = true,
+	include_character_in_translation_exports = false,
+	include_notes_in_translation_exports = false,
+	uses_dotnet = false,
+	try_suppressing_startup_unsaved_indicator = false
 }
 
 
@@ -37,10 +42,24 @@ static func prepare() -> void:
 			ProjectSettings.set_setting("dialogue_manager/%s" % key, null)
 			set_setting(key, value)
 
-	# Set up defaults
+	# Set up initial settings
 	for setting in DEFAULT_SETTINGS:
-		if ProjectSettings.has_setting("dialogue_manager/general/%s" % setting):
-			ProjectSettings.set_initial_value("dialogue_manager/general/%s" % setting, DEFAULT_SETTINGS[setting])
+		var setting_name: String = "dialogue_manager/general/%s" % setting
+		if not ProjectSettings.has_setting(setting_name):
+			set_setting(setting, DEFAULT_SETTINGS[setting])
+		ProjectSettings.set_initial_value(setting_name, DEFAULT_SETTINGS[setting])
+		if setting.ends_with("_path"):
+			ProjectSettings.add_property_info({
+				"name": setting_name,
+				"type": TYPE_STRING,
+				"hint": PROPERTY_HINT_FILE,
+			})
+
+	# Some settings shouldn't be edited directly in the Project Settings window
+	ProjectSettings.set_as_internal("dialogue_manager/general/states", true)
+	ProjectSettings.set_as_internal("dialogue_manager/general/custom_test_scene_path", true)
+	ProjectSettings.set_as_internal("dialogue_manager/general/uses_dotnet", true)
+
 	ProjectSettings.save()
 
 
@@ -57,17 +76,30 @@ static func get_setting(key: String, default):
 		return default
 
 
+static func get_settings(only_keys: PackedStringArray = []) -> Dictionary:
+	var settings: Dictionary = {}
+	for key in DEFAULT_SETTINGS.keys():
+		if only_keys.is_empty() or key in only_keys:
+			settings[key] = get_setting(key, DEFAULT_SETTINGS[key])
+	return settings
+
+
 ### User config
 
 
 static func get_user_config() -> Dictionary:
 	var user_config: Dictionary = {
+		check_for_updates = true,
 		just_refreshed = null,
 		recent_files = [],
+		reopen_files = [],
+		most_recent_reopen_file = "",
 		carets = {},
 		run_title = "",
 		run_resource_path = "",
-		is_running_test_scene = false
+		is_running_test_scene = false,
+		has_dotnet_solution = false,
+		open_in_external_editor = false
 	}
 
 	if FileAccess.file_exists(DialogueConstants.USER_CONFIG_PATH):
@@ -140,3 +172,16 @@ static func get_caret(path: String) -> Vector2:
 		return Vector2(caret.x, caret.y)
 	else:
 		return Vector2.ZERO
+
+
+static func check_for_dotnet_solution() -> bool:
+	if Engine.is_editor_hint():
+		var has_dotnet_solution: bool = false
+		if ProjectSettings.has_setting("dotnet/project/solution_directory"):
+			var directory: String = ProjectSettings.get("dotnet/project/solution_directory")
+			var file_name: String = ProjectSettings.get("dotnet/project/assembly_name")
+			has_dotnet_solution = FileAccess.file_exists("res://%s/%s.sln" % [directory, file_name])
+		set_setting("uses_dotnet", has_dotnet_solution)
+		return has_dotnet_solution
+
+	return get_setting("uses_dotnet", false)

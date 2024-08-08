@@ -8,7 +8,7 @@ func _ready():
 	Global.set_current_place("res://levels/Casa-Crys/casa.tscn")
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
+func _process(_delta):
 	if atividadeResource.get_mini_fase() > 4:
 		if atividadeResource.get_mini_fase() < 7:
 			atividadeResource.set_mini_fase(6)
