@@ -1,0 +1,66 @@
+[gd_scene load_steps=3 format=3 uid="uid://o53ho62o46op"]
+
+[ext_resource type="Script" path="res://scenes_2/character_card.gd" id="1_rh0e8"]
+[ext_resource type="FontFile" uid="uid://bhjgpy1dovmyq" path="res://addons/gut/fonts/CourierPrime-Bold.ttf" id="2_d0rpr"]
+
+[node name="CharacterCard" type="Control"]
+custom_minimum_size = Vector2(64, 196)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 64.0
+offset_bottom = 128.0
+script = ExtResource("1_rh0e8")
+
+[node name="Vertical" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 164.0
+
+[node name="TextureRect" type="TextureRect" parent="Vertical"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 4
+
+[node name="Panel" type="Panel" parent="Vertical/TextureRect"]
+z_index = -10
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="NameLabel" type="Label" parent="Vertical"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_d0rpr")
+theme_override_font_sizes/font_size = 13
+
+[node name="StatsContainer" type="VBoxContainer" parent="Vertical"]
+layout_mode = 2
+
+[node name="HPLabel" type="Label" parent="Vertical/StatsContainer"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_d0rpr")
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+
+[node name="ManaLabel" type="Label" parent="Vertical/StatsContainer"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_d0rpr")
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+
+[node name="ForceLabel" type="Label" parent="Vertical/StatsContainer"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_d0rpr")
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+
+[node name="IntLabel" type="Label" parent="Vertical/StatsContainer"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_d0rpr")
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3

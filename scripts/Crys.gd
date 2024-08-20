@@ -16,14 +16,15 @@ var npc
 @export var _animation_tree: AnimationTree = null
 
 var atividadeResource = preload("res://resources/mini-caderno-resource/new_resource.tres")
-var last_input_time: Dictionary = {
-	"key_right": 0.0,
-	"key_left": 0.0,
-	"key_up": 0.0,
-	"key_down": 0.0
-}
 
 var active_directions: Array = []
+
+enum Direction {
+	RIGHT,
+	LEFT,
+	UP,
+	DOWN
+}
 
 func _ready() -> void:
 	_state_machine = _animation_tree["parameters/playback"]
@@ -37,31 +38,31 @@ func _physics_process(_delta: float) -> void:
 
 func _input(event):
 	if event.is_action_pressed("key_right"):
-		_add_direction("key_right")
+		_add_direction(Direction.RIGHT)
 	elif event.is_action_released("key_right"):
-		_remove_direction("key_right")
+		_remove_direction(Direction.RIGHT)
 
 	if event.is_action_pressed("key_left"):
-		_add_direction("key_left")
+		_add_direction(Direction.LEFT)
 	elif event.is_action_released("key_left"):
-		_remove_direction("key_left")
+		_remove_direction(Direction.LEFT)
 
 	if event.is_action_pressed("key_up"):
-		_add_direction("key_up")
+		_add_direction(Direction.UP)
 	elif event.is_action_released("key_up"):
-		_remove_direction("key_up")
+		_remove_direction(Direction.UP)
 
 	if event.is_action_pressed("key_down"):
-		_add_direction("key_down")
+		_add_direction(Direction.DOWN)
 	elif event.is_action_released("key_down"):
-		_remove_direction("key_down")
+		_remove_direction(Direction.DOWN)
 
-func _add_direction(direction: String) -> void:
+func _add_direction(direction: int) -> void:
 	if direction in active_directions:
 		active_directions.erase(direction)
 	active_directions.append(direction)
 
-func _remove_direction(direction: String) -> void:
+func _remove_direction(direction: int) -> void:
 	if direction in active_directions:
 		active_directions.erase(direction)
 
@@ -69,13 +70,13 @@ func _get_latest_direction() -> Vector2:
 	var _direction: Vector2 = Vector2()
 	for direction in active_directions:
 		match direction:
-			"key_right":
+			Direction.RIGHT:
 				_direction.x = 1
-			"key_left":
+			Direction.LEFT:
 				_direction.x = -1
-			"key_up":
+			Direction.UP:
 				_direction.y = -1
-			"key_down":
+			Direction.DOWN:
 				_direction.y = 1
 	return _direction
 
