@@ -39,3 +39,7 @@ func set_character():
 func generate_random_name() -> String:
 	var names = ["Aragorn", "Legolas", "Gimli", "Gandalf", "Frodo", "Samwise"]
 	return names[randi() % names.size()]
+
+
+func _on_button_pressed() -> void:
+	print("Hello world!")
